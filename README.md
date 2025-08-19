@@ -4,4 +4,5 @@ It saves, if path is correct, Sortie.txt file in designated path.
 It tries also to guess the key using only the sentence and encryption.
 For longer sentences, you can change the size of sentence and key givin in the code. 
 Some choices were made to meet the project requirements,leaving it "less" optimal than it could be.
+Encrypt.cpp is source code. Encrypt_me is the compiled version (g++ 13.3.0) to be run.  
 Enjoy ( ~ ￣ ³ ￣ ) ~
