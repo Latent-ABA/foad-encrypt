@@ -4,8 +4,9 @@
 // Date_1.0 : 13.08.2025
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //-Révision_1.2 : 18.08.2025 de la fonction calcul_cle()                                                                                           //
-//-Révision_2.0 : 19.08.2025 de la fonction calcul_cle():                                                                                          //
-// tester sur plutôt toute la longueur que longueur / 2 pour éviter quand la clé est à son max et qu'on a motif de 4 qui se répéte vers la fin     //
+//-Révision_2.0 : 19.08.2025 de la fonction calcul_cle()											   //
+//Révision_2.1 : 20.08.2025 de la fonction calcul_cle()	                                                                                           //
+//																		   //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // librairies nécessaires
@@ -46,60 +47,48 @@ void cryptage(const char phrase[], const char cle_tampon[], char cryptee[]) {
 //Calcul clé : fonction () ///////////////////////////////////////////////////////
 void calcul_cle(const char phrase[], const char cryptee[], char deviner[]) {
     int len = strlen(phrase);
-    int min_cle = 4; // \n de la fin de chaine de car
-    int max_cle = len / 2;  // clé <  1/2 phrase
+    int min_cle = 4; //  de la fin de chaine de car
+    int max_cle = len / 2 - 1;  // clé <  1/2 phrase -1
 
     bool trouve = false;     // flag pour clé trouvée
     int long_cle = max_cle;  // initialisation à max
 
-    // tampon pour contenir la clé "brute" sur max_cle lettres
-    char devine_tampon[len];  //taille
+    // tampon pour contenir la clé répétée au moins deux fois (si on regarde les conditions de cin clé et phrase en terme de longueure)
+    char devine_tampon[len+1];  //taille
     for (int i = 0; i < len; i++) {
         devine_tampon[i] = ((cryptee[i] - phrase[i] + 26) % 26) + 'A';
     }
     devine_tampon[len] = '\0';  //index : commence à zéro
 
     // tester toutes les longueurs possibles de répétition
-    for (int long_cherchee = max_cle*2 - 3; long_cherchee >=  min_cle && !trouve; long_cherchee--) 
-    { 
-        // vérifier si motif à 4 lettres existe
-        if (
-            devine_tampon[0] != devine_tampon[long_cherchee] ||
-            devine_tampon[1] != devine_tampon[long_cherchee + 1] ||
-            devine_tampon[2] != devine_tampon[long_cherchee + 2] ||
-            devine_tampon[3] != devine_tampon[long_cherchee + 3]) 
-        {
-            continue; // pas de motif, passer à la prochaine longueur
-        }
-        //motif trouvé ! on a un entier de répétition de clé
-        //tester toutes les répétitions possibles
-        long_cle = long_cherchee; // initier à au moins toute la longueure
-        
-        for (int rep = long_cherchee / 4; rep > 1 && !trouve; rep--) // on divise par rep, donc eviter 0
+	for (int long_cherchee = len-1; long_cherchee >=  min_cle && !trouve; long_cherchee--) 
+	{ 	
+	    for (int rep = long_cherchee / 4; rep > 1 && !trouve; rep--) 
+	    {   
+		if (long_cherchee % rep != 0) continue; // pas multiple exact
 
-        {   
-            //if (rep == 1 ) cand = max_cle; 
-            if (long_cherchee % rep != 0) continue; // pas multiple exact
+		int cand = long_cherchee / rep;
+		int motif_ok = 1;
 
-            int cand = long_cherchee / rep; //pas diviser par 0
-            int motif_ok = 1;
+		for (int j = 1; j < rep; j++) 
+		{
+		    for (int k = 0 ; k < cand; k++) // vérifier que CHAQUE répétition à longueur candidate cand contient le même mot, si vrai mot = clé
+		    {
 
-            // vérifier que CHAQUE répétition contient le même mot, si vrai mot = clé
-            for (int j = 1; j < rep; j++) 
-            { // j commence à 1
-                for (int k = 0 ; k <= cand - 1; k++)
-                    {
-                        if (devine_tampon[j*k] != devine_tampon[(j+1)*k]) 
-                        {motif_ok; break;}
-                    } 
-            }
+		        if (devine_tampon[k] != devine_tampon[j*cand + k]) 
+		        {
+		            motif_ok = 0; break; // au moindre inégalité, on sort de la boucle de vérification ici: boucle imbriquée 1/2
+		        }
+		    }
+		    if (!motif_ok) break;  // au moindre inégalité de lettre, on sort de la boucle de répétition aussi 2/2
+		}
 
-            if (motif_ok) { // répétition correcte
-                long_cle = cand;   // longueur exacte de la clé
-                trouve = true;     // sortir de toutes les boucles
-            }
-        }
-    }
+		if (motif_ok) { // seule candition pour retenir cand comme longueur et pas long_max, cette condition couvre aussi la longueue de 4 , minimal, car dans nos conditions initiales on fait en sorte d'avoir au moins deux
+		    long_cle = cand;
+		    trouve = true;
+		}
+	    }
+	}
 
     // copier exactement la clé devinée (long_cle lettres)
     
@@ -114,8 +103,9 @@ void calcul_cle(const char phrase[], const char cryptee[], char deviner[]) {
 
 
 
-//limite majeur ici, si le mot est symétrique : répétitions dedans (exemple CLECLE), on va reporter la plus longue clé possible
-// si c'est un multiple dela longueur : donc ici plus la clé est courte est une répétition en soit, plus on a de chance de se tromper
+//limite majeur ici, si le mot est symétrique : répétitions dedans (exemple CLECLE) : sans info supplémentaire sur la taille de la clé, le programme donnera
+//une clé avec le pattern correct mais symétrie non controlée (dépendra de la congueure de la phrase en plus du multiplicateur, on a celui de la symétrie) 
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +115,7 @@ void calcul_cle(const char phrase[], const char cryptee[], char deviner[]) {
 int main() {
     ///programme principal qui lit la phrase à chiffrer, la clé de chiffrement,
     /// envoie le résultat et devine à partir de la phrase et le chiffrement la clé
-    //message de bienvenue
+    ///message de bienvenue
     cout << "*********************************************************" << endl;
     cout << "*                                                       *" << endl;
     cout << "*              Projet4: Cryptographie   .ABA            *" << endl;
@@ -141,7 +131,7 @@ int main() {
     cout << "* - Pas de caractères spéciaux, especes ni miniscules   *" << endl;
     cout << "* - La phrase doit contenir au moins 9 caractères       *" << endl;
     cout << "* - La clé doit contenir au moins 4 caractères et       *" << endl;
-    cout << "*   ne pas dépasser la 1/2 la longueur de la phrase     *"<< endl;
+    cout << "*   ne pas dépasser la 1/2 la longueur de la phrase -1   *"<< endl;
     cout << "* - Vous avez 3 essais                                  *" <<endl;
     cout << "*                                                       *" <<endl;
     cout << "*********************************************************" << endl;
@@ -202,7 +192,7 @@ int main() {
         cout << "Essai pour la clé " << essai << " : " << endl;
         cout << "Entrez la clé de chiffrement qui respecte les conditions citées: " << endl;
         cin >> la_clee;
-        if (strlen(la_clee) < 4 || strlen(la_clee) > strlen(text_depart) / 2) {
+        if (strlen(la_clee) < 4 || strlen(la_clee) > strlen(text_depart) / 2 -1 ) {
             cout << "La clé doit être au moins de 4 caractères et au max la moitié de la phrase à chiffrer." << endl;
             essai++;
             continue; // passer à l'essai suivant
@@ -229,21 +219,21 @@ int main() {
     cryptage(text_depart, cle_tampon, text_crypte);
     cout << endl;
     calcul_cle(text_depart, text_crypte, devine_cle);
-    if (strlen(devine_cle) != strlen (la_clee))
-    {
+    if (strlen(devine_cle) != strlen (la_clee)) //comparaison de la longueur de la clé devinée et celle donnée pour savoir si on est bon
+    { 
         cout << endl;
         cout << "Noooooon !! (┛◉Д◉)┛彡┻━┻ " << endl;
         cout << "La clé devinée est incorrecte " << endl;
     }
 
 
-    // Sauvegarder les résultats dans un fichier //////////////////////////////////////////////////////////////
+    // sauvegarder les résultats dans le fichier Sortie.txt /////////////////////////////////////////////////////
     char chemin_complet[256]; // variable pour stocker le fichier avec son chemin complet
     strcpy(chemin_complet, chemin_fichier);  //chemin
     strcat(chemin_complet, "/Sortie.txt"); // fichier avec chemin
-    FILE *fichier = fopen(chemin_complet, "w+"); // écrase et réécrit le fichier
+    FILE *fichier = fopen(chemin_complet, "w+"); // écrase et réécrit le fichier ici le chemin doit être correcte
     if (fichier != NULL) {
-    // En-tête
+    // lettres et correspondance en rang
         fprintf(fichier, "Lettres: \t A B C D E F G H I  J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z\n");
         fprintf(fichier, "Rang alphabet: \t 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26\n\n");
     
@@ -255,31 +245,31 @@ int main() {
         }   
         fprintf(fichier, "\nTexte départ: \t %s\n", text_depart);
         
-        // Rangs initiaux
+        // rangs de départ
         fprintf(fichier, "Rangs initiaux:\t ");
         for (int i = 0; i < strlen(text_depart); i++) {
             fprintf(fichier, "%d ", text_depart[i] - 'A');
         }
         
-        // Décalages
+        // décalages
         fprintf(fichier, "\nDécalages:\t ");
         for (int i = 0; i < strlen(text_depart); i++) {
             fprintf(fichier, "%d ", cle_tampon[i] - 'A');
         }
         
-        // Somme avant 
+        // somme avant 
         fprintf(fichier, "\nSomme avant :\t ");
         for (int i = 0; i < strlen(text_depart); i++) {
             fprintf(fichier, "%d ", (text_depart[i] - 'A') + (cle_tampon[i] - 'A'));
         }
         
-        // Rangs finaux
+        // rangs finaux
         fprintf(fichier, "\nRangs finaux:\t ");
         for (int i = 0; i < strlen(text_depart); i++) {
             fprintf(fichier, "%d ", (text_crypte[i] - 'A'));
         }
         
-        // Résultats complets
+        // affichage text de départ et final
         fprintf(fichier, "\n\nTexte départ:\n %s\n", text_depart);
         fprintf(fichier, "Texte crypté:\n %s\n", text_crypte);
         
