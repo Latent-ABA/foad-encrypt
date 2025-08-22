@@ -29,7 +29,9 @@ void decalage(const char phrase[], const char cle[], char cle_tampon[]) {
         cle_tampon[i] = cle[i % len_cle]; // répéter la clé
         cout << (cle_tampon[i] - 'A') << " "; // affichage du décalage
     }
+    cle_tampon[len_phrase] = '\0';
     cout << endl;
+    
 }
 ////////////////////////////////////////////////////////////////////////////////
 //Cryptage : fonction () ///////////////////////////////////////////////////////
@@ -45,21 +47,16 @@ void cryptage(const char phrase[], const char cle_tampon[], char cryptee[]) {
 }
 ///////////////////////////////////////////////////////////////////////////////////
 //Calcul clé : fonction () ///////////////////////////////////////////////////////
-void calcul_cle(const char phrase[], const char cryptee[], char deviner[]) {
+void calcul_cle(const char phrase[], const char cryptee[], const char devine_tampon[] ,char deviner[]) {
     int len = strlen(phrase);
+    //ici devine tampon c'est la clé avec répétition !! donc on connais pas la clé finalement !
     int min_cle = 4; //  de la fin de chaine de car
     int max_cle = len / 2 - 1;  // clé <  1/2 phrase -1
 
     bool trouve = false;     // flag pour clé trouvée
     int long_cle = max_cle;  // initialisation à max
 
-    // tampon pour contenir la clé répétée au moins deux fois (si on regarde les conditions de cin clé et phrase en terme de longueure)
-    char devine_tampon[len+1];  //taille
-    for (int i = 0; i < len; i++) {
-        devine_tampon[i] = ((cryptee[i] - phrase[i] + 26) % 26) + 'A';
-    }
-    devine_tampon[len] = '\0';  //index : commence à zéro
-
+     // devine tampon est clé tampon générée par la fonction decalage
     // tester toutes les longueurs possibles de répétition
 	for (int long_cherchee = len-1; long_cherchee >=  min_cle && !trouve; long_cherchee--) 
 	{ 	
@@ -82,7 +79,7 @@ void calcul_cle(const char phrase[], const char cryptee[], char deviner[]) {
 		    }
 		    if (!motif_ok) break;  // au moindre inégalité de lettre, on sort de la boucle de répétition aussi 2/2
 		}
-
+ 
 		if (motif_ok) { // seule candition pour retenir cand comme longueur et pas long_max, cette condition couvre aussi la longueue de 4 , minimal, car dans nos conditions initiales on fait en sorte d'avoir au moins deux
 		    long_cle = cand;
 		    trouve = true;
@@ -129,9 +126,9 @@ int main() {
     cout << "*   en MAJUSCULES en utilisant une clé de chiffrement.  *" << endl;
     cout << "*         Les conditions sont les suivantes :           *" << endl;
     cout << "* - Pas de caractères spéciaux, especes ni miniscules   *" << endl;
-    cout << "* - La phrase doit contenir au moins 9 caractères       *" << endl;
+    cout << "* - La phrase doit contenir au moins 10 caractères      *" << endl;
     cout << "* - La clé doit contenir au moins 4 caractères et       *" << endl;
-    cout << "*   ne pas dépasser la 1/2 la longueur de la phrase -1   *"<< endl;
+    cout << "*   ne pas dépasser la 1/2 la longueur de la phrase -1  *"<< endl;
     cout << "* - Vous avez 3 essais                                  *" <<endl;
     cout << "*                                                       *" <<endl;
     cout << "*********************************************************" << endl;
@@ -147,6 +144,7 @@ int main() {
     int essai = 1;
     cout << endl;
 
+
     char text_depart[256]; // ou réécrire pour plus long 
     char la_clee[128]; // au moins moitié de la phrase
     char text_crypte[256];
@@ -160,8 +158,8 @@ int main() {
         cout << "Entrez une phrase à chiffrer qui respecte les conditions citées: " << endl;
         cin >> text_depart;
 
-        if (strlen(text_depart) < 9) {
-            cout << "La phrase doit être au moins de 9 caractères." << endl;
+        if (strlen(text_depart) <=9) {
+            cout << "La phrase doit être au moins de 10 caractères." << endl;
             essai++;
             continue; // passer à l'essai suivant
         }
@@ -171,13 +169,11 @@ int main() {
             if (text_depart[i] < 'A' || text_depart[i] > 'Z') {
                 cout << "La phrase doit être en MAJUSCULES." << endl;
                 condition = 0; // phrase invalide
+		essai++;
                 break; // inutile de continuer
             }
         }
 
-        if (!condition) {
-            essai++;
-        }
     } // sortie du while pour la phrase et vérification si on est à 4 essais pour sortir du programme
 
     if (essai == 4) {
@@ -202,12 +198,11 @@ int main() {
             if (la_clee[i] < 'A' || la_clee[i] > 'Z') {
                 cout << "La clé doit être en MAJUSCULES." << endl;
                 condition = 0; // clé invalide
+		essai++;
                 break; // inutile de continuer
             }
         }   
-        if (!condition) {
-            essai++;
-        }
+        
     } // sortie du while pour la clé et vérification si on est à 4 essais pour sortir du programme
     if (essai == 4) {
         cout << "Vous avez dépassé le nombre d'essais autorisés pour la clé." << endl;
@@ -218,7 +213,7 @@ int main() {
     cout << endl;
     cryptage(text_depart, cle_tampon, text_crypte);
     cout << endl;
-    calcul_cle(text_depart, text_crypte, devine_cle);
+    calcul_cle(text_depart, text_crypte, cle_tampon, devine_cle);
     if (strlen(devine_cle) != strlen (la_clee)) //comparaison de la longueur de la clé devinée et celle donnée pour savoir si on est bon
     { 
         cout << endl;
