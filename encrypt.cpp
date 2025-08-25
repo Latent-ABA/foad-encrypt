@@ -47,7 +47,7 @@ void cryptage(const char phrase[], const char cle_tampon[], char cryptee[]) {
 }
 ///////////////////////////////////////////////////////////////////////////////////
 //Calcul clé : fonction () ///////////////////////////////////////////////////////
-void calcul_cle(const char phrase[], const char cryptee[], const char devine_tampon[] ,char deviner[]) {
+void calcul_cle(const char phrase[], const char cryptee[] ,char deviner[]) {
     int len = strlen(phrase);
     //ici devine tampon c'est la clé avec répétition !! donc on connais pas la clé finalement !
     int min_cle = 4; //  de la fin de chaine de car
@@ -55,6 +55,12 @@ void calcul_cle(const char phrase[], const char cryptee[], const char devine_tam
 
     bool trouve = false;     // flag pour clé trouvée
     int long_cle = max_cle;  // initialisation à max
+    //cette fonction dois fonctionner sans avoir une idée de la clé (même clé tampon)
+    char devine_tampon[len+1];  //taille
+    for (int i = 0; i < len; i++) {
+        devine_tampon[i] = ((cryptee[i] - phrase[i] + 26) % 26) + 'A';
+    }
+    devine_tampon[len] = '\0';  //index : commence à zéro
 
      // devine tampon est clé tampon générée par la fonction decalage
     // tester toutes les longueurs possibles de répétition
@@ -213,7 +219,7 @@ int main() {
     cout << endl;
     cryptage(text_depart, cle_tampon, text_crypte);
     cout << endl;
-    calcul_cle(text_depart, text_crypte, cle_tampon, devine_cle);
+    calcul_cle(text_depart, text_crypte, devine_cle);
     if (strlen(devine_cle) != strlen (la_clee)) //comparaison de la longueur de la clé devinée et celle donnée pour savoir si on est bon
     { 
         cout << endl;
